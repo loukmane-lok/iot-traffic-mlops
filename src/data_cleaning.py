@@ -16,7 +16,7 @@ class DataStrategy(ABC):
         Abstract method to handle data processing.
         
         Args:
-            data (pd.DateFrame): Input data.
+            data (pd.DataFrame): Input data.
         
         Returns:
             Union[pd.DataFrame, pd.Series, dict]: Processed data.
@@ -64,12 +64,13 @@ class DataPreprocessingStrategy(DataStrategy):
             data['Day'] = data['DateTime'].dt.day
             data['Month'] = data['DateTime'].dt.month
             data['Week'] = data['DateTime'].dt.isocalendar().week.astype(int)
+            
 
             return data
 
         except Exception as e:
             logging.error(f"[DataPreprocessingStrategy] Failed to preprocess data: {e}")
-            raise
+            raise 
 
 
 class DataDivideStrategy(DataStrategy):
@@ -80,15 +81,15 @@ class DataDivideStrategy(DataStrategy):
 
     def handle_data(self, data: pd.DataFrame) -> dict:
         """
-        Split the dataset into X_train, X_test, y_train, and y_test
+        Split the dataset into train_data and test_data
         using a 4-month time-based cutoff.
 
         Args:
-            data (pd.DataFrame): Preprocessed data containing 'DateTime',
+            data (pd.DataFrame): Dataset containing 'DateTime',
                                  feature columns, and 'Vehicles' as the target.
 
         Returns:
-            dict: Dictionary with keys 'X_train', 'X_test', 'y_train', 'y_test'.
+            dict: Dictionary with keys 'train_data', 'test_data'.
 
         Raises:
             KeyError: If necessary columns are missing.
@@ -96,7 +97,7 @@ class DataDivideStrategy(DataStrategy):
         """
         try:
             # Ensure required columns exist
-            required_columns = ['DateTime', 'Vehicles', 'Hour', 'Weekday', 'Day', 'Month', 'Week']
+            required_columns = ['Vehicles', 'Hour', 'Weekday', 'Day', 'Month', 'Week']
             for col in required_columns:
                 if col not in data.columns:
                     raise KeyError(f"Missing required column: {col}")
@@ -107,22 +108,10 @@ class DataDivideStrategy(DataStrategy):
             # Split data
             train_data = data[data['DateTime'] <= cutoff_date]
             test_data = data[data['DateTime'] > cutoff_date]
-
-            # Extract features and target
-            features = ['Hour', 'Weekday', 'Day', 'Month', 'Week']
-            X_train = train_data[features]
-            y_train = train_data['Vehicles']
-            X_test = test_data[features]
-            y_test = test_data['Vehicles']
-
-            if X_train.empty or X_test.empty:
-                logging.warning("[DataDivideStrategy] X_train or X_test is empty.")
-
+            
             return {
-                'X_train': X_train,
-                'X_test': X_test,
-                'y_train': y_train,
-                'y_test': y_test
+                'train_data': train_data,
+                'test_data': test_data
             }
 
         except Exception as e:

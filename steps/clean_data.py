@@ -13,7 +13,7 @@ def clean_data(data: pd.DataFrame) -> dict:
         data (pd.DataFrame): Raw input dataset.
 
     Returns:
-        dict: Dictionary containing X_train, X_test, y_train, y_test.
+        dict: Dictionary containing train_data, test_data.
     """
     try:
         # Apply preprocessing strategy
@@ -23,11 +23,11 @@ def clean_data(data: pd.DataFrame) -> dict:
         # Apply data division strategy
         divider = DataCleaning(processed_data, DataDivideStrategy())
         data_dict = divider.handle_data()
-        loggin.info("Data Cleaning Completed !")
+        logging.info("Data Cleaning Completed !")
         return data_dict
 
     except Exception as e:
         logging.error(f"[clean_data] Failed to clean and divide the data: {e}")
-        raise
+        raise 
 
         
