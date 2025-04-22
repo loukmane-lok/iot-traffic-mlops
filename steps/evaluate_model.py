@@ -1,11 +1,11 @@
 from zenml import step
-from evaluation import RMSE
+from src.evaluation import RMSE
 import pandas as pd
 from typing import Dict
-from config import ModelNameConfig
+from steps.config import ModelNameConfig
 import logging
 
-@step
+@step(enable_cache=False)
 def evaluate_model(test_data: pd.DataFrame, 
                    trained_models: Dict[str, object], 
                    config: ModelNameConfig
@@ -22,13 +22,14 @@ def evaluate_model(test_data: pd.DataFrame,
         Dict[str, float]: RMSE score per junction.
     """
     try:
+        logging.info("Evaluation Step ...")
         rmse = RMSE()
         scores = {}
         
         for junc in sorted(test_data['Junction'].unique()):
             
             subset = test_data[test_data['Junction'] == junc].copy()
-            model = trained_models.get(junc)
+            model = trained_models.get(str(junc))
             
             if model is None:
                 logging.warning(f"No trained model found for junction {junc}")
@@ -44,7 +45,8 @@ def evaluate_model(test_data: pd.DataFrame,
             scores[junc] = rmse_score
             
             logging.info(f"Junction {junc}: RMSE = {rmse_score:.2f}")
-     
+
+        logging.info("Evaluation Step Completed !")
         return scores
         
     except Exception as e:

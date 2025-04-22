@@ -52,9 +52,10 @@ def ingest_data(data_path: str) -> pd.DataFrame:
         RuntimeError: If there is an issue during the ingestion process.
     """
     try:
-        logging.info(f"Ingestion Step")
+        logging.info("Ingestion Step ....")
         data_ingest = DataIngest(data_path)
         data = data_ingest.get_data()
+        logging.info("Ingestion Step Completed !")
         return data
     except Exception as e:
         logging.error(f"Error while ingesting the data: {e}")

@@ -36,10 +36,13 @@ class XGBRegressorModel(Model):
     
     def __init__(self, param_grid=None, n_splits=3, random_state=42):
         self.param_grid = param_grid or {
-            'n_estimators': [50, 100],
-            'max_depth': [3, 5],
-            'learning_rate': [0.05, 0.1],
-            'subsample': [0.8, 1]
+            'n_estimators': [25, 50, 75],                 # fewer trees
+            'max_depth': [2, 3],                      # shallower trees
+            'learning_rate': [0.01, 0.05],            # slower learning
+            'subsample': [0.6, 0.8],                  # use part of data for each tree
+            'colsample_bytree': [0.6, 0.8],           # use part of features
+            'reg_alpha': [0.1, 1],                    # L1 regularization
+            'reg_lambda': [1, 5]                      # L2 regularization
         }
         self.n_splits = n_splits
         self.random_state = random_state
@@ -65,12 +68,15 @@ class XGBRegressorModel(Model):
                 grid = GridSearchCV(model, self.param_grid, scoring=rmse_scorer, cv=tcvs, verbose=0)
                 grid.fit(X, y)    
                 
-                self.best_models[junc] = grid.best_estimator_
-                self.best_params[junc] = grid.best_params_
-                self.best_scores[junc] = grid.best_score_
+                self.best_models[str(junc)] = grid.best_estimator_
+                self.best_params[str(junc)] = grid.best_params_
+                self.best_scores[str(junc)] = grid.best_score_
                 
-                logging.info(f"Junction {junc}: RMSE = {-self.best_scores[junc]:.2f}")
-                logging.debug(f"Best Params: {self.best_params[junc]}")
+                logging.info(f"Junction {str(junc)}: RMSE = {-self.best_scores[str(junc)]:.2f}")
+                logging.debug(f"Best Params: {self.best_params[str(junc)]}")
+                
+            
+            logging.info(f"results['models']: {self.best_models}")
                 
             return {
                 "models": self.best_models,

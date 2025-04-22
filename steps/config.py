@@ -1,10 +1,8 @@
-from zenml.steps import BaseParameters
+from zenml.config.base_settings import BaseSettings
 from typing import List
 
-class ModelNameConfig(BaseParameters):
-    """
-    Model config
-    """
-    model_name:str = "XGBRegressor"
+class ModelNameConfig(BaseSettings):
+    """ Model config """
+    model: str = "XGBRegressor"
     features: List[str]
     target: str = "Vehicles"

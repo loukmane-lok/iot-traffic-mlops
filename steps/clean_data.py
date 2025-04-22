@@ -1,11 +1,11 @@
 import logging
 import pandas as pd
 from zenml import step
-from data_cleaning import DataCleaning, DataPreprocessingStrategy, DataDivideStrategy
-
+from src.data_cleaning import DataCleaning, DataPreprocessingStrategy, DataDivideStrategy
+from typing import Tuple
 
 @step
-def clean_data(data: pd.DataFrame) -> dict:
+def clean_data(data: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Clean and prepare the dataset by applying preprocessing and train-test split strategies.
 
@@ -13,9 +13,10 @@ def clean_data(data: pd.DataFrame) -> dict:
         data (pd.DataFrame): Raw input dataset.
 
     Returns:
-        dict: Dictionary containing train_data, test_data.
+        Tuple[pd.DataFrame, pd.DataFrame]: train_data and test_data.
     """
     try:
+        logging.info("Data Cleaning Step ...")
         # Apply preprocessing strategy
         preprocessing = DataCleaning(data, DataPreprocessingStrategy())
         processed_data = preprocessing.handle_data()
@@ -24,10 +25,12 @@ def clean_data(data: pd.DataFrame) -> dict:
         divider = DataCleaning(processed_data, DataDivideStrategy())
         data_dict = divider.handle_data()
         logging.info("Data Cleaning Completed !")
-        return data_dict
+        
+        # Return train and test data separately
+        return data_dict['train_data'], data_dict['test_data']
 
     except Exception as e:
         logging.error(f"[clean_data] Failed to clean and divide the data: {e}")
-        raise 
+        raise
 
         
