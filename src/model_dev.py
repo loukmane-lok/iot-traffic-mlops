@@ -52,38 +52,30 @@ class XGBRegressorModel(Model):
         
     def train(self, train_data: pd.DataFrame, features: list[str], target: str = 'Vehicles') -> dict:
         try:
-            junctions = sorted(train_data['Junction'].unique())
-            logging.info(f"Starting training for {len(junctions)} junction(s)...")
+            logging.info("Training a single model for all junctions...")
 
-            for junc in junctions:
-                logging.info(f"Training model for junction: {junc}")
-                
-                subset = train_data[train_data['Junction'] == junc]
-                X = subset[features]
-                y = subset[target]
-                
-                tcvs = TimeSeriesSplit(n_splits=self.n_splits)
-                
-                model = XGBRegressor(random_state=self.random_state)
-                grid = GridSearchCV(model, self.param_grid, scoring=rmse_scorer, cv=tcvs, verbose=0)
-                grid.fit(X, y)    
-                
-                self.best_models[str(junc)] = grid.best_estimator_
-                self.best_params[str(junc)] = grid.best_params_
-                self.best_scores[str(junc)] = grid.best_score_
-                
-                logging.info(f"Junction {str(junc)}: RMSE = {-self.best_scores[str(junc)]:.2f}")
-                logging.debug(f"Best Params: {self.best_params[str(junc)]}")
-                
-            
-            logging.info(f"results['models']: {self.best_models}")
-                
+            X = train_data[features]
+            y = train_data[target]
+
+            tcvs = TimeSeriesSplit(n_splits=self.n_splits)
+
+            model = XGBRegressor(random_state=self.random_state)
+            grid = GridSearchCV(model, self.param_grid, scoring=rmse_scorer, cv=tcvs, verbose=0)
+            grid.fit(X, y)
+
+            best_model = grid.best_estimator_
+            best_params = grid.best_params_
+            best_score = grid.best_score_
+
+            logging.info(f"Global Model RMSE = {-best_score:.2f}")
+            logging.debug(f"Best Params: {best_params}")
+
             return {
-                "models": self.best_models,
-                "params": self.best_params,
-                "scores": self.best_scores
+                "model": best_model,
+                "params": best_params,
+                "score": best_score
             }
 
         except Exception as e:
-            logging.error(f"Failed to train models for junctions: {e}")
+            logging.error(f"Failed to train global model: {e}")
             raise e

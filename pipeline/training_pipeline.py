@@ -5,14 +5,15 @@ from steps.train_model import train_model
 from steps.evaluate_model import evaluate_model
 from steps.config import ModelNameConfig
 
+
+
 model = "XGBRegressor"
 features = ['Hour', 'Weekday', 'Day', 'Month', 'Week']
 target = "Vehicles"
-
 config = ModelNameConfig(model=model, features=features, target=target)
 
 @pipeline
-def training_pipeline(data_path: str, config: ModelNameConfig=config):
+def training_pipeline(data_path: str, config: ModelNameConfig = config):
     """
     Full training pipeline that ingests, cleans, trains, and evaluates a model.
 
@@ -26,14 +27,14 @@ def training_pipeline(data_path: str, config: ModelNameConfig=config):
     # Step 2: Clean and split data
     train_data, test_data = clean_data(data=raw_data)
 
+    # Step 3: Train a single model on all data
+    trained_model = train_model(train_data=train_data, config=config)
 
-    # Step 3: Train model
-    trained_models = train_model(train_data=train_data, config=config)
-
-    # Step 4: Evaluate model
-    scores = evaluate_model(test_data=test_data, trained_models=trained_models, config=config)
+    # Step 4: Evaluate the global model
+    scores = evaluate_model(test_data=test_data, trained_model=trained_model, config=config)
 
     return scores
+
    
     
     

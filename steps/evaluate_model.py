@@ -10,48 +10,36 @@ from steps.utils import experiment_tracker
 
 @step(experiment_tracker=experiment_tracker.name)
 def evaluate_model(test_data: pd.DataFrame, 
-                   trained_models: Dict[str, object], 
+                   trained_model: object, 
                    config: ModelNameConfig
                 ) -> Dict[str, float]:
     """
-    Evaluate trained models.
-    
+    Evaluate the trained global model on the entire test dataset.
+
     Args:
         test_data (pd.DataFrame): Test dataset.
-        trained_models(Dict[str, object]): Dictionary of trained models per junction.
-        config(ModelNameConfig): Model configuration including features and target.
+        trained_model (object): Trained global model.
+        config (ModelNameConfig): Model configuration including features and target.
         
     Returns: 
-        Dict[str, float]: RMSE score per junction.
+        Dict[str, float]: RMSE score for the global model.
     """
     try:
         logging.info("Evaluation Step ...")
         rmse = RMSE()
-        scores = {}
-        
-        for junc in sorted(test_data['Junction'].unique()):
-            
-            subset = test_data[test_data['Junction'] == junc].copy()
-            model = trained_models.get(str(junc))
-            
-            if model is None:
-                logging.warning(f"No trained model found for junction {junc}")
-                continue
-            
-            X_test = subset[config.features]
-            y_test = subset[config.target]
-            
-            y_pred = model.predict(X_test)
 
-            rmse_score = rmse.calculate_scores(y_test, y_pred)
-            mlflow.log_metric("rmse", rmse_score )
-            scores[junc] = rmse_score
-            
-            logging.info(f"Junction {junc}: RMSE = {rmse_score:.2f}")
+        X_test = test_data[config.features]
+        y_test = test_data[config.target]
 
-        logging.info("Evaluation Step Completed !")
-        return scores
-        
+        y_pred = trained_model.predict(X_test)
+        rmse_score = rmse.calculate_scores(y_test, y_pred)
+
+        mlflow.log_metric("rmse", rmse_score)
+        logging.info(f"Global Model RMSE = {rmse_score:.2f}")
+
+        logging.info("Evaluation Step Completed!")
+        return {"rmse": rmse_score}
+
     except Exception as e:
-        logging.error(f"Error during evaluation {e}")
+        logging.error(f"Error during evaluation: {e}")
         raise
