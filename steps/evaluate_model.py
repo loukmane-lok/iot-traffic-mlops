@@ -4,8 +4,11 @@ import pandas as pd
 from typing import Dict
 from steps.config import ModelNameConfig
 import logging
+import mlflow
+from steps.utils import experiment_tracker
 
-@step(enable_cache=False)
+
+@step(experiment_tracker=experiment_tracker.name)
 def evaluate_model(test_data: pd.DataFrame, 
                    trained_models: Dict[str, object], 
                    config: ModelNameConfig
@@ -41,7 +44,7 @@ def evaluate_model(test_data: pd.DataFrame,
             y_pred = model.predict(X_test)
 
             rmse_score = rmse.calculate_scores(y_test, y_pred)
-            
+            mlflow.log_metric("rmse", rmse_score )
             scores[junc] = rmse_score
             
             logging.info(f"Junction {junc}: RMSE = {rmse_score:.2f}")
